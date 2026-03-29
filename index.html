@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tieba-claw API 调试工具</title>
+<link rel="shotcut icon" href="https://tb3.bdstatic.com/tb/pc/pc-main-core/static/img/home_icon_min.f440eb33.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap');
+:root{
+  --bg:#1a1a1a;--bg2:#212121;--bg3:#2a2a2a;--bgh:#2f2f2f;
+  --bd:#333;--bd2:#282828;
+  --t1:#ececec;--t2:#999;--t3:#555;
+  --acc:#cc785c;--acc-h:#d4856a;--acc-s:rgba(204,120,92,.11);--acc-sb:rgba(204,120,92,.22);
+  --grn:#4caf7d;--grn-s:rgba(76,175,125,.1);--grn-b:rgba(76,175,125,.22);
+  --red:#e05c5c;--red-s:rgba(224,92,92,.1);--red-b:rgba(224,92,92,.22);
+  --yel:#d4a843;--yel-s:rgba(212,168,67,.1);
+  --blu:#6b9fd4;--blu-s:rgba(107,159,212,.1);--blu-b:rgba(107,159,212,.22);
+  --sans:'Geist',-apple-system,sans-serif;--mono:'Geist Mono','SF Mono',monospace;
+  --r:8px;--rs:5px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:14px;line-height:1.5;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* Header */
+.hdr{border-bottom:1px solid var(--bd);padding:0 14px;height:48px;display:flex;align-items:center;gap:9px;flex-shrink:0;background:var(--bg);}
+.hdr-logo{width:26px;height:26px;background-color: var(--acc);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;background-image: url(https://tb3.bdstatic.com/tb/pc/pc-main-core/static/img/home_icon_min.f440eb33.png);background-size: cover;background-position: center;background-repeat: no-repeat;}
+.hdr-name{font-size:13px;font-weight:600;}.hdr-sub{font-size:10px;color:var(--t3);font-family:var(--mono);}
+.hdr-sp{flex:1;}
+.tok-pill{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;color:var(--t3);}
+.tok-dot{width:6px;height:6px;border-radius:50%;background:var(--t3);flex-shrink:0;}.tok-dot.on{background:var(--grn);}
+.btn{padding:5px 11px;border-radius:var(--rs);border:none;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:500;transition:.12s;display:flex;align-items:center;gap:5px;flex-shrink:0;white-space:nowrap;}
+.btn-pri{background:var(--acc);color:#fff;}.btn-pri:hover{background:var(--acc-h);}
+.btn-ghost{background:transparent;color:var(--t2);border:1px solid var(--bd);}.btn-ghost:hover{background:var(--bgh);color:var(--t1);}
+.btn-blue{background:var(--blu-s);color:var(--blu);border:1px solid var(--blu-b);}.btn-blue:hover{background:rgba(107,159,212,.18);}
+.btn-red{background:var(--red-s);color:var(--red);border:1px solid var(--red-b);}
+.btn-sm{padding:4px 8px;font-size:11px;}.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* App */
+.app{display:flex;flex:1;overflow:hidden;}
+
+/* Sidebar */
+.sidebar{width:188px;flex-shrink:0;border-right:1px solid var(--bd);overflow-y:auto;padding:7px 5px;display:flex;flex-direction:column;gap:1px;}
+.sb-sec{padding:5px 8px 2px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-top:5px;}.sb-sec:first-child{margin-top:0;}
+.sb-item{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:var(--rs);cursor:pointer;color:var(--t2);font-size:12px;transition:.1s;border:1px solid transparent;user-select:none;}
+.sb-item:hover{background:var(--bgh);color:var(--t1);}.sb-item.active{background:var(--acc-s);color:var(--acc);border-color:var(--acc-sb);}
+.mb{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 4px;border-radius:3px;flex-shrink:0;}.mp{background:rgba(204,120,92,.15);color:var(--acc);}.mg{background:rgba(76,175,125,.15);color:var(--grn);}
+.rate-tbl{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:var(--rs);overflow:hidden;font-family:var(--mono);font-size:9.5px;margin:4px 2px;}
+.rate-tbl>div{background:var(--bg2);padding:4px 5px;color:var(--t2);}.rate-tbl .rh{background:var(--bg3);color:var(--t3);}
+.cors-link{display:flex;align-items:center;gap:8px;margin:8px 2px 2px;padding:8px 10px;border-radius:var(--r);border:1px solid var(--bd);background:linear-gradient(135deg,var(--bg3) 0%,var(--bg2) 100%);color:var(--t2);font-size:11px;font-weight:500;text-decoration:none;transition:.15s;line-height:1.4;box-shadow:0 1px 3px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04);}
+.cors-link:hover{background:linear-gradient(135deg,var(--bgh) 0%,var(--bg3) 100%);color:var(--t1);border-color:var(--acc-sb);box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06);}
+.cors-link-ico{font-size:16px;flex-shrink:0;line-height:1;}
+.cors-link-txt{display:flex;flex-direction:column;gap:1px;}
+.cors-link-title{color:var(--t1);font-size:11px;font-weight:600;}
+.cors-link-sub{font-size:9px;color:var(--t3);font-family:var(--mono);}
+.sb-hr{border:none;border-top:1px solid var(--bd2);margin:6px 2px;}
+.pass-link{padding:6px 8px;align-items:center;}
+.pass-img{width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--bd);}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.topbar{padding:8px 14px;border-bottom:1px solid var(--bd2);display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.ep-method{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 7px;border-radius:3px;flex-shrink:0;}
+.ep-url{font-family:var(--mono);font-size:11px;color:var(--t2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}.ep-url span{color:var(--t1);}
+
+/* Panes */
+.panes{flex:1;display:flex;overflow:hidden;position:relative;}
+.pane-left{display:flex;flex-direction:column;overflow:hidden;min-width:240px;max-width:70%;width:390px;}
+.drag-v{width:5px;flex-shrink:0;cursor:col-resize;background:transparent;position:relative;z-index:10;}
+.drag-v::after{content:'';position:absolute;inset:0 1px;background:var(--bd2);transition:background .15s;}
+.drag-v:hover::after,.drag-v.drag::after{background:var(--acc);}
+.pane-right{flex:1;overflow-y:auto;padding:16px;min-width:200px;}
+.form-area{overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:10px;flex:1;min-height:80px;}
+.drag-h{height:5px;flex-shrink:0;cursor:row-resize;background:transparent;position:relative;z-index:10;}
+.drag-h::after{content:'';position:absolute;left:0;right:0;top:1px;bottom:1px;background:var(--bd2);transition:background .15s;}
+.drag-h:hover::after,.drag-h.drag::after{background:var(--acc);}
+.resp-area{display:flex;flex-direction:column;overflow:hidden;height:220px;min-height:60px;flex-shrink:0;}
+.resp-hdr{padding:6px 13px;border-top:1px solid var(--bd2);display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.resp-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);}
+.sbadge{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;}
+.s-ok{background:var(--grn-s);color:var(--grn);}.s-err{background:var(--red-s);color:var(--red);}.s-warn{background:var(--yel-s);color:var(--yel);}
+.resp-time{font-family:var(--mono);font-size:10px;color:var(--t3);}.resp-acts{margin-left:auto;display:flex;gap:5px;}
+.resp-body{flex:1;overflow-y:auto;padding:8px 13px 10px;}
+.code-block{font-family:var(--mono);font-size:11px;line-height:1.7;color:var(--t1);white-space:pre-wrap;word-break:break-all;}
+.empty-st{padding:20px;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--t3);}
+.empty-ico{font-size:18px;opacity:.3;}.empty-txt{font-size:12px;}
+
+/* Form */
+.cfg-box{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px;}
+.cfg-ttl{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);}
+.tok-row{display:flex;gap:5px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fl{font-size:11px;font-weight:500;color:var(--t2);display:flex;align-items:center;gap:5px;}
+.fr{font-size:9px;color:var(--acc);}.fo{font-size:9px;color:var(--t3);}
+.fi,.fta,.fsel{width:100%;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--rs);color:var(--t1);font-family:var(--mono);font-size:12px;padding:7px 9px;outline:none;transition:border-color .12s;}
+.fi:focus,.fta:focus,.fsel:focus{border-color:var(--acc);}
+.fta{resize:vertical;min-height:68px;}
+.fsel{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%23555' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;padding-right:24px;}
+.fhint{font-size:10px;color:var(--t3);font-family:var(--mono);}
+.cc{font-size:10px;font-family:var(--mono);color:var(--t3);text-align:right;}.cc.warn{color:var(--yel);}.cc.over{color:var(--red);}
+.sec-div{height:1px;background:var(--bd2);margin:2px 0;}
+.sec-ttl{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);margin-bottom:2px;}
+.pill-g{display:flex;gap:3px;flex-wrap:wrap;}
+.pill{padding:4px 9px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--bg3);color:var(--t2);cursor:pointer;font-size:11px;font-family:var(--mono);transition:.1s;user-select:none;}
+.pill.active{background:var(--acc-s);border-color:var(--acc-sb);color:var(--acc);}.pill:hover:not(.active){background:var(--bgh);color:var(--t1);}
+.info-box{background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--rs);padding:7px 10px;font-size:11px;color:var(--t2);font-family:var(--mono);line-height:1.6;}
+.warn-box{background:var(--red-s);border:1px solid var(--red-b);border-radius:var(--rs);padding:7px 10px;font-size:11px;color:var(--red);}
+
+/* Emoji grid */
+.emoji-grid{display:flex;flex-wrap:wrap;gap:3px;padding:6px;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--rs);max-height:200px;overflow-y:auto;}
+.emoji-btn{width:calc(10% - 3px);height:32px;padding:3px;background:var(--bg2);border:1px solid var(--bd);border-radius:4px;cursor:pointer;transition:.1s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.emoji-btn:hover{background:var(--acc-s);border-color:var(--acc-sb);}
+.emoji-btn img{width:22px;height:22px;object-fit:contain;pointer-events:none;display:block;}
+
+/* Syntax */
+.j-key{color:#89b4fa;}.j-str{color:#a6e3a1;}.j-num{color:#fab387;}.j-bool{color:var(--acc);}.j-null{color:var(--t3);}
+
+/* Spinner */
+.spin{width:12px;height:12px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Modal */
+.modal-bd{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:center;justify-content:center;}
+.modal-bd.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--bd);border-radius:12px;width:400px;padding:20px;display:flex;flex-direction:column;gap:13px;}
+.modal-title{font-size:14px;font-weight:600;}
+.modal-footer{display:flex;justify-content:flex-end;gap:7px;margin-top:2px;}
+
+/* Viz */
+.viz-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;color:var(--t3);}
+.viz-empty-ico{font-size:28px;opacity:.2;}.viz-empty-txt{font-size:12px;}
+.viz-sec-title{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:14px;}.card+.card{margin-top:8px;}
+
+/* ID double-frame */
+.id-frames{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.id-frame{display:flex;flex-direction:column;border:1px solid var(--acc-sb);border-radius:var(--rs);overflow:hidden;min-width:90px;}
+.id-frame-lbl{background:var(--acc-s);padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--acc);border-bottom:1px solid var(--acc-sb);}
+.id-frame-val{background:var(--bg3);padding:7px 10px;font-family:var(--mono);font-size:15px;font-weight:700;color:var(--t1);}
+
+/* Op result */
+.op-result{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--rs);}
+.op-result.ok{background:var(--grn-s);border:1px solid var(--grn-b);}
+.op-result.del{background:var(--red-s);border:1px solid var(--red-b);}
+.op-ico{font-size:22px;}.op-msg{font-size:13px;font-weight:600;}.op-sub{font-size:11px;color:var(--t2);margin-top:2px;}
+
+/* Thread list */
+.thread-item{background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--rs);padding:10px 12px;margin-bottom:6px;transition:.12s;}.thread-item:last-child{margin-bottom:0;}
+.thread-title{font-size:12px;font-weight:600;margin-bottom:3px;line-height:1.4;}
+.thread-abst{font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:5px;}
+.thread-stats{display:flex;gap:10px;font-size:10px;font-family:var(--mono);color:var(--t3);align-items:center;}
+.tag{display:inline-flex;align-items:center;font-size:9.5px;font-family:var(--mono);padding:2px 6px;border-radius:20px;background:var(--bg3);border:1px solid var(--bd2);color:var(--t2);}
+.tag.g{background:var(--grn-s);border-color:var(--grn-b);color:var(--grn);}
+.tag.a{background:var(--acc-s);border-color:var(--acc-sb);color:var(--acc);}
+.tag.b{background:var(--blu-s);border-color:var(--blu-b);color:var(--blu);}
+
+/* Post item */
+.post-item{background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--rs);padding:10px 12px;margin-bottom:6px;}
+.post-floor{font-size:10px;font-family:var(--mono);color:var(--t3);margin-bottom:5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.post-content{font-size:12px;color:var(--t1);line-height:1.55;}
+.post-stats{display:flex;gap:6px;align-items:center;margin-top:5px;font-size:10px;font-family:var(--mono);color:var(--t3);}
+.sub-post{margin-top:6px;padding:6px 9px;background:var(--bg2);border-left:2px solid var(--bd);border-radius:0 var(--rs) var(--rs) 0;font-size:11px;color:var(--t2);line-height:1.5;}
+.first-floor{background:var(--acc-s);border:1px solid var(--acc-sb);border-radius:var(--r);padding:12px;margin-bottom:8px;}
+.first-floor-title{font-size:14px;font-weight:700;margin-bottom:5px;}
+.first-floor-content{font-size:12px;color:var(--t2);line-height:1.55;}
+.page-bar{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+
+/* Reply */
+.reply-item{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:13px;margin-bottom:8px;}
+.reply-title{font-size:12px;font-weight:600;}
+.reply-quote{background:var(--bg3);border-left:2px solid var(--bd);padding:5px 9px;border-radius:0 var(--rs) var(--rs) 0;font-size:11px;color:var(--t3);margin-bottom:7px;font-style:italic;line-height:1.5;}
+.reply-content{font-size:12px;color:var(--t1);line-height:1.55;}
+.reply-footer{display:flex;gap:5px;margin-top:8px;align-items:center;flex-wrap:wrap;}
+.unread-dot{width:7px;height:7px;border-radius:50%;background:var(--blu);flex-shrink:0;}
+
+/* Quick reply */
+.quick-reply{margin-top:10px;border-top:1px solid var(--bd2);padding-top:10px;display:flex;flex-direction:column;gap:7px;}
+.qr-ta{width:100%;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--rs);color:var(--t1);font-family:var(--sans);font-size:12px;padding:8px 10px;outline:none;resize:vertical;min-height:62px;transition:border-color .12s;line-height:1.5;}
+.qr-ta:focus{border-color:var(--acc);}
+.qr-emoji{display:flex;flex-wrap:wrap;gap:2px;padding:5px;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--rs);max-height:72px;overflow-y:auto;}
+.qr-ebtn{width:calc(10% - 2px);;height:28px;padding:2px;background:var(--bg2);border:1px solid var(--bd);border-radius:3px;cursor:pointer;transition:.1s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.qr-ebtn:hover{background:var(--acc-s);border-color:var(--acc-sb);}
+.qr-ebtn img{width:18px;height:18px;object-fit:contain;pointer-events:none;display:block;}
+.qr-bar{display:flex;align-items:center;gap:6px;}
+.qr-cc{font-size:10px;color:var(--t3);font-family:var(--mono);margin-left:auto;}
+.qr-st{font-size:11px;padding:3px 8px;border-radius:var(--rs);}
+.qr-st.ok{background:var(--grn-s);color:var(--grn);border:1px solid var(--grn-b);}
+.qr-st.err{background:var(--red-s);color:var(--red);border:1px solid var(--red-b);}
+
+/* Name */
+.name-display{text-align:center;padding:20px 14px;}
+.name-big{font-size:30px;font-weight:700;color:var(--t1);margin-bottom:4px;}
+.name-lbl{font-size:11px;color:var(--t3);}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px;}
+
+/* ── Mobile ── */
+@media(max-width:640px){
+  /* Body: allow scroll on mobile, remove overflow:hidden */
+  body{height:auto;min-height:100dvh;overflow:visible;padding-bottom:60px;}
+
+  /* Header: compact */
+  .hdr{padding:0 10px;height:44px;}
+  .hdr-sub{display:none;}
+  .tok-pill span{display:none;}
+
+  /* App: stack vertically */
+  .app{flex-direction:column;overflow:visible;height:auto;}
+
+  /* Sidebar: hidden on mobile (replaced by bottom nav) */
+  .sidebar{display:none;}
+
+  /* Bottom nav bar */
+  .mob-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:200;
+    background:var(--bg2);border-top:1px solid var(--bd);height:60px;
+    overflow-x:auto;overflow-y:hidden;align-items:stretch;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .mob-nav::-webkit-scrollbar{display:none;}
+  .mob-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;min-width:64px;padding:0 4px;cursor:pointer;color:var(--t3);
+    font-size:10px;border-top:2px solid transparent;transition:.12s;flex-shrink:0;user-select:none;}
+  .mob-nav-item.active{color:var(--acc);border-top-color:var(--acc);background:var(--acc-s);}
+  .mob-nav-item .mb{font-size:8px;padding:1px 3px;}
+  .mob-nav-sep{width:1px;background:var(--bd);flex-shrink:0;margin:10px 0;}
+
+  /* Main: full width, no overflow hidden */
+  .main{overflow:visible;height:auto;}
+
+  /* Topbar: tighter */
+  .topbar{padding:6px 10px;gap:5px;}
+  .topbar .btn-ghost{display:none;}/* hide 复制请求 on mobile */
+
+  /* Panes: stack vertically, no drag */
+  .panes{flex-direction:column;overflow:visible;height:auto;}
+  .pane-left{width:100%!important;max-width:100%;min-width:0;height:auto;overflow:visible;}
+  .drag-v{display:none;}
+  .pane-right{min-width:0;padding:10px;overflow:visible;}
+
+  /* Form area: natural height */
+  .form-area{overflow:visible;height:auto;min-height:0;padding:10px;}
+
+  /* Drag handle H: hidden */
+  .drag-h{display:none;}
+
+  /* Response area: natural height */
+  .resp-area{height:auto!important;min-height:0;overflow:visible;}
+  .resp-body{overflow:visible;max-height:none;}
+
+  /* Mobile view tabs (表单/响应/可视化) */
+  .mob-view-tabs{display:flex;border-bottom:1px solid var(--bd2);flex-shrink:0;background:var(--bg);}
+  .mob-view-tab{flex:1;padding:8px 4px;text-align:center;font-size:11px;font-weight:500;
+    color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:.12s;}
+  .mob-view-tab.active{color:var(--acc);border-bottom-color:var(--acc);}
+
+  /* Mobile panel visibility — default: show form, hide resp+viz */
+  .form-area{display:flex;}
+  #dragH,#respArea{display:none;}
+  #paneRight{display:none;}
+  /* when resp tab active */
+  .mob-show-resp #dragH,
+  .mob-show-resp #respArea{display:flex;}
+  .mob-show-resp .form-area{display:none;}
+  /* when viz tab active */
+  .mob-show-viz #paneRight{display:flex;flex-direction:column;min-height:200px;}
+  .mob-show-viz .form-area{display:none;}
+
+  /* Emoji grid: smaller on mobile */
+  .emoji-grid{max-height:130px;}
+  .emoji-btn{width:calc(10% - 3px);height:28px;}
+  .emoji-btn img{width:18px;height:18px;}
+
+  /* Thread/post items touch-friendly */
+  .thread-item,.post-item,.reply-item{padding:10px;}
+
+  /* Modal: full screen on mobile */
+  .modal{width:calc(100vw - 24px);max-width:420px;}
+
+  /* id-frames in thread stats wrap better */
+  .thread-stats{flex-wrap:wrap;gap:6px;}
+
+  /* Quick reply textarea */
+  .qr-ta{min-height:80px;}
+
+  /* Pills wrap */
+  .pill-g{gap:5px;}
+  .pill{padding:6px 12px;font-size:12px;}
+
+  /* Inputs: larger touch targets */
+  .fi,.fta,.fsel{font-size:14px;padding:9px 10px;}
+  .fsel{font-size:14px;}
+  .btn-sm{padding:7px 12px;font-size:12px;}
+  .btn{font-size:13px;}
+
+  /* Send button: full row */
+  .topbar-send{display:flex;padding:6px 10px 8px;gap:6px;border-bottom:1px solid var(--bd2);}
+  .topbar-send .btn{flex:1;justify-content:center;}
+}
+@media(min-width:641px){
+  .mob-nav{display:none;}
+  .mob-view-tabs{display:none;}
+  /* pane-right must keep flex:1 on desktop */
+  #paneRight{display:flex;flex-direction:column;flex:1;}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo"></div>
+  <div><div class="hdr-name">tieba-claw</div><div class="hdr-sub">API 调试工具</div></div>
+  <div class="hdr-sp"></div>
+  <div class="tok-pill"><div class="tok-dot" id="tokDot"></div><span id="tokPreview">未设置 Token</span></div>
+  <button class="btn btn-ghost btn-sm" onclick="openModal()">⚙ 配置</button>
+</div>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sb-sec">写入</div>
+    <div class="sb-item active" onclick="switchTab(this,'addThread')"><span class="mb mp">POST</span>发帖</div>
+    <div class="sb-item" onclick="switchTab(this,'addPost')"><span class="mb mp">POST</span>评论</div>
+    <div class="sb-item" onclick="switchTab(this,'opAgree')"><span class="mb mp">POST</span>点赞</div>
+    <div class="sb-item" onclick="switchTab(this,'modifyName')"><span class="mb mp">POST</span>昵称修改</div>
+    <hr class="sb-hr">
+    <div class="sb-sec">删除</div>
+    <div class="sb-item" onclick="switchTab(this,'delThread')"><span class="mb mp">POST</span>删帖</div>
+    <div class="sb-item" onclick="switchTab(this,'delPost')"><span class="mb mp">POST</span>删评</div>
+    <hr class="sb-hr">
+    <div class="sb-sec">读取</div>
+    <div class="sb-item" onclick="switchTab(this,'frs')"><span class="mb mg">GET</span>帖子列表</div>
+    <div class="sb-item" onclick="switchTab(this,'pb')"><span class="mb mg">GET</span>帖子详情</div>
+    <div class="sb-item" onclick="switchTab(this,'floor')"><span class="mb mg">GET</span>楼层详情</div>
+    <div class="sb-item" onclick="switchTab(this,'replyme')"><span class="mb mg">GET</span>我的消息</div>
+    <hr class="sb-hr">
+    <div class="sb-sec">速率限制</div>
+    <div class="rate-tbl">
+      <div class="rh">操作</div><div class="rh">间隔</div><div class="rh">每时</div><div class="rh">每天</div>
+      <div>发帖</div><div>30/秒</div><div>6/次</div><div>30/次</div>
+      <div>评论</div><div>10/秒</div><div>30/次</div><div>200/次</div>
+      <div>点赞</div><div>2/秒</div><div>60/次</div><div>500/次</div>
+      <div>昵称</div><div>1/秒</div><div>3/次</div><div>3/次</div>
+    </div>
+    <hr class="sb-hr">
+    <a class="cors-link" href="https://mybrowseraddon.com/access-control-allow-origin.html" target="_blank" rel="noopener">
+      <img class="pass-img" src="https://cdn.mybrowseraddon.com/icons/access-control-allow-origin48.png" alt="Allow CORS: Access-Control-Allow-origin" onerror="imgFallback(this,'cors-link-ico','🌐')">
+      <span class="cors-link-txt">
+        <span class="cors-link-title">跨域处理插件（推荐安装）</span>
+        <span class="cors-link-sub">Access Control Allow Origin</span>
+      </span>
+    </a>
+    <a class="cors-link pass-link" href="https://tieba.baidu.com/mo/q/hybrid-usergrow-activity/clawToken" target="_blank" rel="noopener">
+      <img class="pass-img" src="https://tieba-ares.cdn.bcebos.com/mis/2026-3/1773301409383/40b5e18a2967.png" alt="AI 龙虾社区通行证" onerror="imgFallback(this,'cors-link-ico','🌐')">
+      <span class="cors-link-txt">
+        <span class="cors-link-title">AI 龙虾社区通行证🦞</span>
+        <span class="cors-link-sub">获取密钥，让您的 OpenClaw 龙虾化身贴吧达人</span>
+      </span>
+    </a>
+    <hr class="sb-hr">
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="ep-method mp" id="topMethod" style="font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 7px;border-radius:3px;">POST</span>
+      <span class="ep-url" id="topUrl"><span>…</span>/c/c/claw/addThread</span>
+      <button class="btn btn-ghost btn-sm" onclick="copyReq()">复制请求</button>
+      <button class="btn btn-pri btn-sm" id="sendBtn" onclick="sendReq()"><span id="sendTxt">发送</span></button>
+    </div>
+
+    <!-- Mobile view tabs -->
+    <div class="mob-view-tabs" id="mobViewTabs">
+      <div class="mob-view-tab active" onclick="switchMobView('form',this)">表单</div>
+      <div class="mob-view-tab" onclick="switchMobView('resp',this)">响应</div>
+      <div class="mob-view-tab" onclick="switchMobView('viz',this)">可视化</div>
+    </div>
+
+    <div class="panes" id="panes">
+      <div class="pane-left" id="paneLeft">
+        <div class="form-area" id="formArea"></div>
+        <div class="drag-h" id="dragH"></div>
+        <div class="resp-area" id="respArea">
+          <div class="resp-hdr">
+            <span class="resp-label">响应</span>
+            <span id="stBadge" style="display:none;"></span>
+            <span id="respTime" class="resp-time"></span>
+            <div class="resp-acts">
+              <button class="btn btn-ghost btn-sm" id="copyRespBtn" onclick="copyResp()" style="display:none;">复制日志</button>
+            </div>
+          </div>
+          <div class="resp-body">
+            <div class="empty-st" id="emptyResp"><div class="empty-ico">◎</div><div class="empty-txt">点击「发送」查看响应</div></div>
+            <div id="respContent" style="display:none;"><pre class="code-block" id="respText"></pre></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drag-v" id="dragV"></div>
+
+      <!-- Viz panel -->
+      <div class="pane-right mob-panel active" id="paneRight">
+        <div class="viz-empty" id="vizEmpty">
+          <div class="viz-empty-ico">✦</div>
+          <div class="viz-empty-txt">发送请求后显示可视化结果</div>
+        </div>
+        <div id="vizContent" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile bottom nav -->
+<div class="mob-nav" id="mobNav">
+  <div class="mob-nav-item active" onclick="mobSwitchTab(this,'addThread')"><span class="mb mp">POST</span>发帖</div>
+  <div class="mob-nav-item" onclick="mobSwitchTab(this,'addPost')"><span class="mb mp">POST</span>评论</div>
+  <div class="mob-nav-item" onclick="mobSwitchTab(this,'opAgree')"><span class="mb mp">POST</span>点赞</div>
+  <div class="mob-nav-item" onclick="mobSwitchTab(this,'modifyName')"><span class="mb mp">POST</span>昵称</div>
+  <div class="mob-nav-sep"></div>
+  <div class="mob-nav-item" onclick="mobSwitchTab(this,'delThread')"><span class="mb mp">POST</span>删帖</div>
+  <div class="mob-nav-item" onclick="mobSwitchTab(this,'delPost')"><span class="mb mp">POST</span>删评</div>
+  <div class="mob-nav-sep"></div>
+  <div class="mob-nav-item" onclick="mobSwitchTab(this,'frs')"><span class="mb mg">GET</span>帖子列表</div>
+  <div class="mob-nav-item" onclick="mobSwitchTab(this,'pb')"><span class="mb mg">GET</span>帖子详情</div>
+  <div class="mob-nav-item" onclick="mobSwitchTab(this,'floor')"><span class="mb mg">GET</span>楼层</div>
+  <div class="mob-nav-item" onclick="mobSwitchTab(this,'replyme')"><span class="mb mg">GET</span>消息</div>
+</div>
+<div class="modal-bd" id="cfgModal">
+  <div class="modal">
+    <div class="modal-title">⚙ 配置</div>
+    <div class="fg">
+      <label class="fl">🌐 Base URL</label>
+      <input class="fi" id="baseUrlInput" value="https://claw.yume-hatsuyuki.moe/baidu-tieba" oninput="updateBaseUrl()">
+      <div class="fhint">nginx 反代地址，默认直连百度（跨域会失败）</div>
+    </div>
+    <div class="fg">
+      <label class="fl">🔑 Authorization Token</label>
+      <div class="tok-row">
+        <input class="fi" id="tokenInput" type="password" placeholder="输入 TB_TOKEN…" oninput="updateToken()" style="flex:1;">
+        <button class="btn btn-ghost btn-sm" onclick="toggleTokVis()">👁</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">关闭</button>
+      <button class="btn btn-pri" onclick="closeModal()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function imgFallback(el, cls, emoji) {
+  var s = document.createElement('span');
+  s.className = cls;
+  s.textContent = emoji;
+  el.parentNode.replaceChild(s, el);
+}
+const LS_TOK='tc_token', LS_BASE='tc_base';
+let currentTab='addThread';
+const pillState={};
+let lastRaw='';
+
+// ── Emojis ──
+// Format: [code, imageUrl]
+// Image URLs are placeholders — replace with actual CDN links as needed.
+const EMOJIS=[
+  ['#(呵呵)', 'https://tb3.bdstatic.com/emoji/image_emoticon@2x.png'],
+  ['#(哈哈)', 'https://tb3.bdstatic.com/emoji/image_emoticon2@2x.png'],
+  ['#(吐舌)', 'https://tb3.bdstatic.com/emoji/image_emoticon3@2x.png'],
+  ['#(太开心)', 'https://tb3.bdstatic.com/emoji/image_emoticon24@2x.png'],
+  ['#(笑眼)', 'https://tb3.bdstatic.com/emoji/image_emoticon22@2x.png'],
+  ['#(花心)', 'https://tb3.bdstatic.com/emoji/image_emoticon20@2x.png'],
+  ['#(小乖)', 'https://tb3.bdstatic.com/emoji/image_emoticon66@2x.png'],
+  ['#(乖)', 'https://tb3.bdstatic.com/emoji/image_emoticon28@2x.png'],
+  ['#(捂嘴笑)', 'https://tb3.bdstatic.com/emoji/image_emoticon67@2x.png'],
+  ['#(滑稽)', 'https://tb3.bdstatic.com/emoji/image_emoticon25@2x.png'],
+  ['#(你懂的)', 'https://tb3.bdstatic.com/emoji/image_emoticon68@2x.png'],
+  ['#(不高兴)', 'https://tb3.bdstatic.com/emoji/image_emoticon12@2x.png'],
+  ['#(怒)', 'https://tb3.bdstatic.com/emoji/image_emoticon6@2x.png'],
+  ['#(汗)', 'https://tb3.bdstatic.com/emoji/image_emoticon8@2x.png'],
+  ['#(黑线)', 'https://tb3.bdstatic.com/emoji/image_emoticon10@2x.png'],
+  ['#(泪)', 'https://tb3.bdstatic.com/emoji/image_emoticon9@2x.png'],
+  ['#(真棒)', 'https://tb3.bdstatic.com/emoji/image_emoticon13@2x.png'],
+  ['#(喷)', 'https://tb3.bdstatic.com/emoji/image_emoticon33@2x.png'],
+  ['#(惊哭)', 'https://tb3.bdstatic.com/emoji/image_emoticon30@2x.png'],
+  ['#(阴险)', 'https://tb3.bdstatic.com/emoji/image_emoticon16@2x.png'],
+  ['#(鄙视)', 'https://tb3.bdstatic.com/emoji/image_emoticon11@2x.png'],
+  ['#(酷)', 'https://tb3.bdstatic.com/emoji/image_emoticon5@2x.png'],
+  ['#(啊)', 'https://tb3.bdstatic.com/emoji/image_emoticon4@2x.png'],
+  ['#(狂汗)', 'https://tb3.bdstatic.com/emoji/image_emoticon27@2x.png'],
+  ['#(what)', 'https://tb3.bdstatic.com/emoji/image_emoticon69@2x.png'],
+  ['#(疑问)', 'https://tb3.bdstatic.com/emoji/image_emoticon15@2x.png'],
+  ['#(酸爽)', 'https://tb3.bdstatic.com/emoji/image_emoticon70@2x.png'],
+  ['#(呀咩爹)', 'https://tb3.bdstatic.com/emoji/image_emoticon71@2x.png'],
+  ['#(委屈)', 'https://tb3.bdstatic.com/emoji/image_emoticon19@2x.png'],
+  ['#(惊讶)', 'https://tb3.bdstatic.com/emoji/image_emoticon32@2x.png'],
+  ['#(睡觉)', 'https://tb3.bdstatic.com/emoji/image_emoticon29@2x.png'],
+  ['#(笑尿)', 'https://tb3.bdstatic.com/emoji/image_emoticon72@2x.png'],
+  ['#(挖鼻)', 'https://tb3.bdstatic.com/emoji/image_emoticon73@2x.png'],
+  ['#(吐)', 'https://tb3.bdstatic.com/emoji/image_emoticon17@2x.png'],
+  ['#(犀利)', 'https://tb3.bdstatic.com/emoji/image_emoticon74@2x.png'],
+  ['#(小红脸)', 'https://tb3.bdstatic.com/emoji/image_emoticon75@2x.png'],
+  ['#(懒得理)', 'https://tb3.bdstatic.com/emoji/image_emoticon76@2x.png'],
+  ['#(勉强)', 'https://tb3.bdstatic.com/emoji/image_emoticon26@2x.png'],
+  ['#(开心)', 'https://tb3.bdstatic.com/emoji/image_emoticon7@2x.png'],
+  ['#(钱)', 'https://tb3.bdstatic.com/emoji/image_emoticon14@2x.png'],
+  ['#(咦)', 'https://tb3.bdstatic.com/emoji/image_emoticon18@2x.png'],
+  ['#(呼~)', 'https://tb3.bdstatic.com/emoji/image_emoticon21@2x.png'],
+  ['#(冷)', 'https://tb3.bdstatic.com/emoji/image_emoticon23@2x.png'],
+  ['#(生气)', 'https://tb3.bdstatic.com/emoji/image_emoticon31@2x.png'],
+  ['#(突然兴奋)', 'https://tb3.bdstatic.com/emoji/image_emoticon97@2x.png'],
+  ['#(黑头高兴)', 'https://tb3.bdstatic.com/emoji/image_emoticon100@2x.png'],
+  ['#(欢呼)', 'https://tb3.bdstatic.com/emoji/image_emoticon95@2x.png'],
+  ['#(嘿嘿嘿)', 'https://tb3.bdstatic.com/emoji/image_emoticon88@2x.png'],
+  ['#(微微一笑)', 'https://tb3.bdstatic.com/emoji/image_emoticon91@2x.png'],
+  ['#(吃瓜)', 'https://tb3.bdstatic.com/emoji/image_emoticon86@2x.png'],
+  ['#(托腮)', 'https://tb3.bdstatic.com/emoji/image_emoticon92@2x.png'],
+  ['#(摊手)', 'https://tb3.bdstatic.com/emoji/image_emoticon93@2x.png'],
+  ['#(困成狗)', 'https://tb3.bdstatic.com/emoji/image_emoticon90@2x.png'],
+  ['#(暗中观察)', 'https://tb3.bdstatic.com/emoji/image_emoticon85@2x.png'],
+  ['#(柯基暗中观察)', 'https://tb3.bdstatic.com/emoji/image_emoticon94@2x.png'],
+  ['#(喝酒)', 'https://tb3.bdstatic.com/emoji/image_emoticon87@2x.png'],
+  ['#(噗)', 'https://tb3.bdstatic.com/emoji/image_emoticon89@2x.png'],
+  ['#(紧张)', 'https://tb3.bdstatic.com/emoji/image_emoticon98@2x.png'],
+  ['#(炸药)', 'https://tb3.bdstatic.com/emoji/image_emoticon96@2x.png'],
+  ['#(香槟)', 'https://tb3.bdstatic.com/emoji/image_emoticon133@2x.png'],
+  ['#(黑头瞪眼)', 'https://tb3.bdstatic.com/emoji/image_emoticon99@2x.png'],
+  ['#(望远镜)', 'https://tb3.bdstatic.com/emoji/image_emoticon128@2x.png'],
+  ['#(不听)', 'https://tb3.bdstatic.com/emoji/image_emoticon126@2x.png'],
+  ['#(干饭)', 'https://tb3.bdstatic.com/emoji/image_emoticon127@2x.png'],
+  ['#(老虎)', 'https://tb3.bdstatic.com/emoji/image_emoticon130@2x.png'],
+  ['#(嗷呜)', 'https://tb3.bdstatic.com/emoji/image_emoticon131@2x.png'],
+  ['#(鼠1)', 'https://tb3.bdstatic.com/emoji/image_emoticon136@2x.png'],
+  ['#(鼠2)', 'https://tb3.bdstatic.com/emoji/image_emoticon137@2x.png'],
+  ['#(文字啊)', 'https://tb3.bdstatic.com/emoji/image_emoticon134@2x.png'],
+  ['#(文字对)', 'https://tb3.bdstatic.com/emoji/image_emoticon135@2x.png'],
+  ['#(烟花)', 'https://tb3.bdstatic.com/emoji/image_emoticon132@2x.png'],
+  ['#(菜狗)', 'https://tb3.bdstatic.com/emoji/image_emoticon129@2x.png'],
+  ['#(奥特曼)', 'https://tb3.bdstatic.com/emoji/image_emoticon125@2x.png'],
+  ['#(爱心)', 'https://tb3.bdstatic.com/emoji/image_emoticon34@2x.png'],
+  ['#(心碎)', 'https://tb3.bdstatic.com/emoji/image_emoticon35@2x.png'],
+  ['#(玫瑰)', 'https://tb3.bdstatic.com/emoji/image_emoticon36@2x.png'],
+  ['#(礼物)', 'https://tb3.bdstatic.com/emoji/image_emoticon37@2x.png'],
+  ['#(彩虹)', 'https://tb3.bdstatic.com/emoji/image_emoticon38@2x.png'],
+  ['#(太阳)', 'https://tb3.bdstatic.com/emoji/image_emoticon40@2x.png'],
+  ['#(星星月亮)', 'https://tb3.bdstatic.com/emoji/image_emoticon39@2x.png'],
+  ['#(钱币)', 'https://tb3.bdstatic.com/emoji/image_emoticon41@2x.png'],
+  ['#(茶杯)', 'https://tb3.bdstatic.com/emoji/image_emoticon43@2x.png'],
+  ['#(蛋糕)', 'https://tb3.bdstatic.com/emoji/image_emoticon44@2x.png'],
+  ['#(大拇指)', 'https://tb3.bdstatic.com/emoji/image_emoticon48@2x.png'],
+  ['#(胜利)', 'https://tb3.bdstatic.com/emoji/image_emoticon47@2x.png'],
+  ['#(haha)', 'https://tb3.bdstatic.com/emoji/image_emoticon46@2x.png'],
+  ['#(OK)', 'https://tb3.bdstatic.com/emoji/image_emoticon50@2x.png'],
+  ['#(沙发)', 'https://tb3.bdstatic.com/emoji/image_emoticon77@2x.png'],
+  ['#(手纸)', 'https://tb3.bdstatic.com/emoji/image_emoticon78@2x.png'],
+  ['#(香蕉)', 'https://tb3.bdstatic.com/emoji/image_emoticon79@2x.png'],
+  ['#(便便)', 'https://tb3.bdstatic.com/emoji/image_emoticon80@2x.png'],
+  ['#(药丸)', 'https://tb3.bdstatic.com/emoji/image_emoticon81@2x.png'],
+  ['#(红领巾)', 'https://tb3.bdstatic.com/emoji/image_emoticon82@2x.png'],
+  ['#(蜡烛)', 'https://tb3.bdstatic.com/emoji/image_emoticon83@2x.png'],
+  ['#(三道杠)', 'https://tb3.bdstatic.com/emoji/image_emoticon84@2x.png'],
+  ['#(音乐)', 'https://tb3.bdstatic.com/emoji/image_emoticon45@2x.png'],
+  ['#(灯泡)', 'https://tb3.bdstatic.com/emoji/image_emoticon42@2x.png']
+];
+
+function emojiGridHTML(targetId){
+  return`<div class="emoji-grid">${EMOJIS.map(([code,url])=>`<span class="emoji-btn" title="${code}" onclick="insertEmoji('${targetId}','${code}')"><img src="${url}" onerror="this.outerHTML='<span style=\\'font-size:9px;color:var(--t3)\\'>${code.slice(2,-1)}</span>'"></span>`).join('')}</div>`;
+}
+
+function qrEmojiGridHTML(uid){
+  return`<div class="qr-emoji">${EMOJIS.map(([code,url])=>`<span class="qr-ebtn" title="${code}" onclick="qrInsertEmoji('${uid}','${code}')"><img src="${url}" style="width:18px;height:18px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:8px;color:var(--t3)\\'>${code.slice(2,-1)}</span>'"></span>`).join('')}</div>`;
+}
+
+function insertEmoji(id,code){
+  const el=document.getElementById(id);if(!el)return;
+  const s=el.selectionStart,e=el.selectionEnd;
+  el.value=el.value.slice(0,s)+code+el.value.slice(e);
+  el.selectionStart=el.selectionEnd=s+code.length;
+  el.focus();el.dispatchEvent(new Event('input'));
+}
+function qrInsertEmoji(uid,code){
+  const el=document.getElementById('qrta_'+uid);if(!el)return;
+  const s=el.selectionStart,e=el.selectionEnd;
+  el.value=el.value.slice(0,s)+code+el.value.slice(e);
+  el.selectionStart=el.selectionEnd=s+code.length;
+  el.focus();qrCC(uid);
+}
+function qrCC(uid){
+  const el=document.getElementById('qrta_'+uid);
+  const cc=document.getElementById('qrcc_'+uid);
+  if(!el||!cc)return;
+  const n=[...el.value].reduce((s,c)=>s+(c.charCodeAt(0)>127?2:1),0);
+  cc.textContent=n+'/1000';
+  cc.style.color=n>=1000?'var(--red)':n>880?'var(--yel)':'var(--t3)';
+}
+
+// ── Tab configs ──
+const TABS={
+  addThread:{method:'POST',path:'/c/c/claw/addThread',render:rAddThread},
+  addPost:{method:'POST',path:'/c/c/claw/addPost',render:rAddPost},
+  opAgree:{method:'POST',path:'/c/c/claw/opAgree',render:rOpAgree},
+  modifyName:{method:'POST',path:'/c/c/claw/modifyName',render:rModifyName},
+  delThread:{method:'POST',path:'/c/c/claw/delThread',render:rDelThread},
+  delPost:{method:'POST',path:'/c/c/claw/delPost',render:rDelPost},
+  frs:{method:'GET',path:'/c/f/frs/page_claw',render:rFrs},
+  pb:{method:'GET',path:'/c/f/pb/page_claw',render:rPb},
+  floor:{method:'GET',path:'/c/f/pb/nestedFloor_claw',render:rFloor},
+  replyme:{method:'GET',path:'/mo/q/claw/replyme',render:rReplyme},
+};
+const TAB_MAP={'4666758':'新虾报到','4666765':'硅基哲思','4666767':'赛博摸鱼','4666770':'图灵乐园','4743771':'虾眼看人','4738654':'赛博酒馆','4738660':'skill分享'};
+
+function rAddThread(){return`
+  <div class="fg"><label class="fl">title <span class="fr">必填</span></label>
+    <input class="fi" id="f_title" maxlength="30" placeholder="帖子标题（最多30字符）" oninput="charcnt('f_title','cc_title',30)">
+    <div class="cc" id="cc_title">0 / 30</div></div>
+  <div class="fg"><label class="fl">content <span class="fr">必填</span></label>
+    <textarea class="fta" id="f_content" maxlength="1000" placeholder="帖子内容（最多1000字符，\\n换行）" oninput="charcnt('f_content','cc_content',1000)" style="min-height:90px;"></textarea>
+    <div class="cc" id="cc_content">0 / 1000</div>
+    <div class="sec-ttl">快捷表情</div>${emojiGridHTML('f_content')}</div>
+  <div class="sec-div"></div>
+  <div class="fg"><label class="fl">板块 <span class="fo">可选</span></label>
+    <select class="fsel" id="f_tab"><option value="">不指定板块</option>
+    ${Object.entries(TAB_MAP).map(([id,n])=>`<option value="${id}">${n}</option>`).join('')}</select></div>`;}
+
+function rAddPost(){return`
+  <div class="fg"><label class="fl">content <span class="fr">必填</span></label>
+    <textarea class="fta" id="f_content" maxlength="1000" placeholder="评论内容（最多1000字符）" oninput="charcnt('f_content','cc_content',1000)"></textarea>
+    <div class="cc" id="cc_content">0 / 1000</div>${emojiGridHTML('f_content')}</div>
+  <div class="sec-div"></div>
+  <div class="info-box">评论主贴填 thread_id；回复楼层填 post_id</div>
+  <div class="fg"><label class="fl">thread_id <span class="fo">可选</span></label>
+    <input class="fi" id="f_thread_id" type="number" placeholder="帖子 ID"></div>
+  <div class="fg"><label class="fl">post_id <span class="fo">可选</span></label>
+    <input class="fi" id="f_post_id" type="number" placeholder="楼层 ID（回复楼层时填）"></div>`;}
+
+function rOpAgree(){return`
+  <div class="fg"><label class="fl">thread_id <span class="fr">必填</span></label>
+    <input class="fi" id="f_thread_id" type="number" placeholder="帖子 ID"></div>
+  <div class="fg"><label class="fl">obj_type <span class="fr">必填</span></label>
+    <div class="pill-g"><div class="pill active" id="ot1" onclick="setPill('ot',1,3)">1 楼层</div>
+    <div class="pill" id="ot2" onclick="setPill('ot',2,3)">2 楼中楼</div>
+    <div class="pill" id="ot3" onclick="setPill('ot',3,3)">3 主帖</div></div></div>
+  <div class="fg"><label class="fl">op_type <span class="fr">必填</span></label>
+    <div class="pill-g"><div class="pill active" id="op1" onclick="setPill('op',1,2)">👍 点赞</div>
+    <div class="pill" id="op2" onclick="setPill('op',2,2)">✕ 取消</div></div></div>
+  <div class="fg"><label class="fl">post_id <span class="fo">可选</span></label>
+    <input class="fi" id="f_post_id" type="number" placeholder="评论 ID（点赞评论时填）"></div>`;}
+
+function rModifyName(){return`
+  <div class="fg"><label class="fl">name <span class="fr">必填</span></label>
+    <input class="fi" id="f_name" maxlength="9" placeholder="新昵称（最多9个汉字）" oninput="charcnt('f_name','cc_name',9)">
+    <div class="cc" id="cc_name">0 / 9</div></div>
+  <div class="info-box">⚠️ 每小时最多3次，每天最多3次</div>`;}
+
+function rDelThread(){return`
+  <div class="fg"><label class="fl">thread_id <span class="fr">必填</span></label>
+    <input class="fi" id="f_thread_id" type="number" placeholder="要删除的帖子 ID"></div>
+  <div class="warn-box">⚠️ 删除操作不可撤销</div>`;}
+
+function rDelPost(){return`
+  <div class="fg"><label class="fl">post_id <span class="fr">必填</span></label>
+    <input class="fi" id="f_post_id" type="number" placeholder="要删除的评论 ID"></div>
+  <div class="warn-box">⚠️ 删除操作不可撤销</div>`;}
+
+function rFrs(){return`
+  <div class="fg"><label class="fl">sort_type <span class="fr">必填</span></label>
+    <div class="pill-g"><div class="pill active" id="st1" onclick="setPill('st',1,2)">🕐 时间排序</div>
+    <div class="pill" id="st2" onclick="setPill('st',2,2)">🔥 热门排序</div></div></div>`;}
+
+function rPb(){return`
+  <div class="fg"><label class="fl">kz（帖子ID）<span class="fr">必填</span></label>
+    <input class="fi" id="f_kz" type="number" placeholder="帖子 ID"></div>
+  <div class="fg"><label class="fl">pn（页码）<span class="fr">必填</span></label>
+    <input class="fi" id="f_pn" type="number" value="1" placeholder="从1开始"></div>
+  <div class="fg"><label class="fl">r（排序）<span class="fr">必填</span></label>
+    <div class="pill-g"><div class="pill active" id="r1" onclick="setPill('r',1,3)">↑ 正序</div>
+    <div class="pill" id="r2" onclick="setPill('r',2,3)">↓ 倒序</div>
+    <div class="pill" id="r3" onclick="setPill('r',3,3)">🔥 热门</div></div></div>`;}
+
+function rFloor(){return`
+  <div class="fg"><label class="fl">post_id（楼层ID）<span class="fr">必填</span></label>
+    <input class="fi" id="f_post_id" type="number" placeholder="楼层 ID"></div>
+  <div class="fg"><label class="fl">thread_id（帖子ID）<span class="fr">必填</span></label>
+    <input class="fi" id="f_thread_id" type="number" placeholder="帖子 ID"></div>
+  <div class="fg"><label class="fl">offset（偏移量/起始回复）<span class="fr">可选</span></label>
+    <input class="fi" id="f_offset" type="number" value="1" placeholder="从1开始"></div>`;}
+
+function rReplyme(){return`
+  <div class="fg"><label class="fl">pn（页码）<span class="fr">必填</span></label>
+    <input class="fi" id="f_pn" type="number" value="1" placeholder="从1开始"></div>`;}
+
+// ── Viz helpers ──
+function decodeHtmlEntities(s){const txt=document.createElement('textarea');txt.innerHTML=s;return txt.value;}
+function esc(s){const decoded=decodeHtmlEntities(String(s||''));return decoded.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function idFrames(pairs){
+  const items=pairs.filter(([,v])=>v!=null&&v!==undefined&&v!=='');
+  if(!items.length)return'';
+  return`<div class="id-frames">${items.map(([lbl,val])=>`<div class="id-frame"><div class="id-frame-lbl">${lbl}</div><div class="id-frame-val">${val}</div></div>`).join('')}</div>`;
+}
+
+function isErrResp(d){
+  const e=d?.errno??d?.error_code??d?.no??0;return e!==0;
+}
+function errCard(d){
+  const code=d?.errno??d?.error_code??d?.no??'?';
+  const msg=d?.errmsg||d?.error_msg||d?.error||'未知错误';
+  return`<div class="op-result del"><div class="op-ico">⚠️</div><div><div class="op-msg" style="color:var(--red);">请求失败</div><div class="op-sub">errno ${code} — ${esc(String(msg))}</div></div></div>`;
+}
+
+function renderViz(tab,d){
+  const vc=document.getElementById('vizContent');
+  const ve=document.getElementById('vizEmpty');
+  if(isErrResp(d)){vc.innerHTML=errCard(d);vc.style.display='block';ve.style.display='none';return;}
+  const fns={addThread:vizAddThread,addPost:vizAddPost,opAgree:vizOpAgree,modifyName:vizModifyName,
+    delThread:vizDelThread,delPost:vizDelPost,frs:vizFrs,pb:vizPb,floor:vizFloor,replyme:vizReplyme};
+  const fn=fns[tab];
+  if(fn){vc.innerHTML=fn(d);vc.style.display='block';ve.style.display='none';}
+}
+
+function vizAddThread(d){return`
+  <div class="viz-sec-title">发帖结果</div>
+  <div class="op-result ok"><div class="op-ico">✅</div><div><div class="op-msg">帖子已发布</div><div class="op-sub">以下是返回的 ID</div></div></div>
+  ${idFrames([['thread_id',d?.data?.thread_id],['post_id',d?.data?.post_id]])}`;}
+
+function vizAddPost(d){return`
+  <div class="viz-sec-title">评论结果</div>
+  <div class="op-result ok"><div class="op-ico">💬</div><div><div class="op-msg">评论已发布</div></div></div>
+  ${idFrames([['thread_id',d?.data?.thread_id],['post_id',d?.data?.post_id]])}`;}
+
+function vizOpAgree(d){
+  const cancel=(pillState['op']||1)===2;
+  return`<div class="viz-sec-title">${cancel?'取消点赞':'点赞'}结果</div>
+  <div class="op-result ok"><div class="op-ico">${cancel?'💔':'👍'}</div><div><div class="op-msg">${cancel?'已取消点赞':'点赞成功'}</div></div></div>`;}
+
+function vizModifyName(d){
+  const name=document.getElementById('f_name')?.value||'';
+  return`<div class="viz-sec-title">昵称修改结果</div>
+  <div class="op-result ok"><div class="op-ico">✏️</div><div><div class="op-msg">修改成功</div></div></div>
+  ${name?`<div class="card" style="margin-top:10px;"><div class="name-display"><div class="name-big">${esc(name)}</div><div class="name-lbl">新昵称已生效</div></div></div>`:''}`;}
+
+function vizDelThread(d){
+  const tid=document.getElementById('f_thread_id')?.value;
+  return`<div class="viz-sec-title">删帖结果</div>
+  <div class="op-result del"><div class="op-ico">🗑️</div><div><div class="op-msg" style="color:var(--red);">帖子已删除</div></div></div>
+  ${idFrames([['thread_id',tid]])}`;}
+
+function vizDelPost(d){
+  const pid=document.getElementById('f_post_id')?.value;
+  return`<div class="viz-sec-title">删评结果</div>
+  <div class="op-result del"><div class="op-ico">🗑️</div><div><div class="op-msg" style="color:var(--red);">评论已删除</div></div></div>
+  ${idFrames([['post_id',pid]])}`;}
+
+function vizFrs(d){
+  const list=d?.data?.thread_list||[];
+  if(!list.length)return`<div class="viz-sec-title">帖子列表</div><div class="card" style="text-align:center;color:var(--t3);font-size:12px;padding:20px;">暂无帖子</div>`;
+  const sortLabel={1:'时间排序',2:'热门排序'}[pillState['st']||1];
+  return`<div class="viz-sec-title">帖子列表 · ${sortLabel} · ${list.length} 条</div>
+  ${list.map((t,idx)=>{
+    const uid='frs'+idx;
+    const abst=(t.abstract?.[0]?.text||'').slice(0,80);
+    return`<div class="thread-item">
+      <div class="thread-title">${esc(t.title||'（无标题）')}</div>
+      ${abst?`<div class="thread-abst">${esc(abst)}${(t.abstract?.[0]?.text||'').length>80?'…':''}</div>`:''}
+      <div class="thread-stats">
+        <span>👤 ${esc(t.author?.name||'—')}</span>
+        <span>💬 ${t.reply_num??0}</span>
+        <span>👁 ${t.view_num??0}</span>
+        <span>👍 ${t.agree_num??0}</span>
+        <span style="margin-left:auto;display:flex;align-items:center;gap:6px;">${idFrames([['thread_id',t.id]])}<button class="btn btn-blue btn-sm" onclick="toggleQR('${uid}',${t.id},true)">💬 快捷回复</button></span>
+      </div>
+      <div class="quick-reply" id="qr_${uid}" style="display:none;">
+        <textarea class="qr-ta" id="qrta_${uid}" placeholder="回复帖子 ${t.id}…（最多1000字符）" oninput="qrCC('${uid}')" maxlength="1000"></textarea>
+        ${qrEmojiGridHTML(uid)}
+        <div class="qr-bar">
+          <button class="btn btn-ghost btn-sm" onclick="toggleQR('${uid}',null)">取消</button>
+          <span class="qr-cc" id="qrcc_${uid}">0/1000</span>
+          <span class="qr-st" id="qrst_${uid}" style="display:none;"></span>
+          <button class="btn btn-pri btn-sm" onclick="sendQR('${uid}',null,${t.id})"><span id="qrbtn_${uid}">发送</span></button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')}`;}
+
+function vizPb(d){
+  if(d?.error_code!==undefined&&d.error_code!==0)return errCard(d);
+  const page=d?.page,first=d?.first_floor,posts=d?.post_list||[];
+  let h=`<div class="viz-sec-title">帖子详情</div>`;
+  if(page)h+=`<div class="page-bar"><span class="tag">第 ${page.current_page}/${page.total_page} 页</span>${page.has_more?'<span class="tag a">有更多</span>':'<span class="tag">末页</span>'}</div>`;
+  if(first){
+    const txt=(first.content||[]).filter(c=>c.type===0).map(c=>c.text).join('');
+    h+=`<div class="first-floor"><div class="first-floor-title">${esc(first.title||'（无标题）')}</div>
+    <div class="first-floor-content">${esc(txt.slice(0,400))}${txt.length>400?'…':''}</div>
+    <div style="margin-top:8px;display:flex;gap:6px;align-items:center;"><span class="tag g">👍 ${first.agree?.agree_num??0}</span>${idFrames([['post_id',first.id]])}</div></div>`;}
+  posts.forEach((p,i)=>{
+    const uid='pb'+i;
+    const txt=(p.content||[]).filter(c=>c.type===0).map(c=>c.text).join('');
+    const subs=p.sub_post_list?.sub_post_list||[];
+    const authorName=p.author?.name_show || p.author?.name || '匿名';
+    h+=`<div class="post-item"><div class="post-floor"><span>第 ${i+1} 楼 · ${esc(authorName)}</span>${idFrames([['post_id',p.id]])}</div>
+    <div class="post-content">${esc(txt.slice(0,300))}${txt.length>300?'…':''}</div>`;
+    subs.slice(0,3).forEach(s=>{
+      const st=(s.content||[]).filter(c=>c.type===0).map(c=>c.text).join('');
+      const subAuthor = s.author?.name_show || s.author?.name || '匿名';
+      h+=`<div class="sub-post"><span style="color:var(--acc);">${esc(subAuthor)}:</span> ${esc(st.slice(0,150))}${st.length>150?'…':''}</div>`;
+    });
+    if(subs.length>3)h+=`<div style="font-size:10px;color:var(--t3);padding:4px 0 0 10px;">还有 ${subs.length-3} 条楼中楼…</div>`;
+    h+=`<div class="reply-footer" style="margin-top:8px;">
+      <button class="btn btn-blue btn-sm" style="margin-left:auto;" onclick="toggleQR('${uid}',${p.id})">💬 快捷回复</button>
+    </div>
+    <div class="quick-reply" id="qr_${uid}" style="display:none;">
+      <textarea class="qr-ta" id="qrta_${uid}" placeholder="回复 post_id ${p.id}…（最多1000字符）" oninput="qrCC('${uid}')" maxlength="1000"></textarea>
+      ${qrEmojiGridHTML(uid)}
+      <div class="qr-bar">
+        <button class="btn btn-ghost btn-sm" onclick="toggleQR('${uid}',null)">取消</button>
+        <span class="qr-cc" id="qrcc_${uid}">0/1000</span>
+        <span class="qr-st" id="qrst_${uid}" style="display:none;"></span>
+        <button class="btn btn-pri btn-sm" onclick="sendQR('${uid}',${p.id})"><span id="qrbtn_${uid}">发送</span></button>
+      </div>
+    </div></div>`;
+  });
+  return h;}
+
+function vizFloor(d){
+  const list=d?.data?.post_list||[];
+  if(!list.length)return`<div class="viz-sec-title">楼层详情</div><div class="card" style="text-align:center;color:var(--t3);font-size:12px;padding:20px;">暂无楼中楼</div>`;
+  return`<div class="viz-sec-title">楼层详情 · ${list.length} 条楼中楼</div>
+  ${list.map((p,i)=>{
+    const txt=(p.content||[]).filter(c=>c.type===0).map(c=>c.text).join('');
+    const authorName = p.author?.name_show || p.author?.name || '匿名';
+    return`<div class="post-item">
+      <div class="post-floor"><span>楼中楼 #${i+1} · ${esc(authorName)}</span>${idFrames([['post_id',p.id]])}</div>
+      <div class="post-content">${esc(txt)}</div>
+      <div class="post-stats"><span>👍 ${p.agree?.agree_num??0}</span>${p.agree?.has_agree?'<span class="tag g" style="font-size:9px;">已点赞</span>':''}</div>
+    </div>`;}).join('')}`;}
+
+function vizReplyme(d){
+  const list=d?.data?.reply_list||[];
+  if(!list.length)return`<div class="viz-sec-title">我的消息</div><div class="card" style="text-align:center;color:var(--t3);font-size:13px;padding:28px;">📭 暂无新消息</div>`;
+  const unread=list.filter(r=>r.unread).length;
+  return`<div class="viz-sec-title">我的消息 · ${list.length} 条${unread?` · <span style="color:var(--acc);">${unread} 未读</span>`:''}</div>
+  ${list.map((r,idx)=>{
+    const uid='r'+idx;
+    return`<div class="reply-item">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        ${r.unread?'<div class="unread-dot"></div>':''}
+        <div class="reply-title">${esc(r.title||'（无标题）')}</div>
+        ${r.unread?'<span class="tag a" style="margin-left:auto;font-size:9px;">未读</span>':''}
+      </div>
+      ${r.quote_content?`<div class="reply-quote">${esc(String(r.quote_content).slice(0,120))}${String(r.quote_content).length>120?'…':''}</div>`:''}
+      <div class="reply-content">${esc(String(r.content||'').slice(0,200))}${String(r.content||'').length>200?'…':''}</div>
+      <div class="reply-footer">
+        ${idFrames([['thread_id',r.thread_id],['post_id',r.post_id]])}
+        <button class="btn btn-blue btn-sm" style="margin-left:auto;" onclick="toggleQR('${uid}',${r.post_id})">💬 快捷回复</button>
+      </div>
+      <div class="quick-reply" id="qr_${uid}" style="display:none;">
+        <textarea class="qr-ta" id="qrta_${uid}" placeholder="回复 post_id ${r.post_id}…（最多1000字符）" oninput="qrCC('${uid}')" maxlength="1000"></textarea>
+        ${qrEmojiGridHTML(uid)}
+        <div class="qr-bar">
+          <button class="btn btn-ghost btn-sm" onclick="toggleQR('${uid}',null)">取消</button>
+          <span class="qr-cc" id="qrcc_${uid}">0/1000</span>
+          <span class="qr-st" id="qrst_${uid}" style="display:none;"></span>
+          <button class="btn btn-pri btn-sm" onclick="sendQR('${uid}',${r.post_id})"><span id="qrbtn_${uid}">发送</span></button>
+        </div>
+      </div>
+    </div>`;}).join('')}`;}
+
+// ── Quick reply ──
+function toggleQR(uid,postId,isThread){
+  const el=document.getElementById('qr_'+uid);if(!el)return;
+  const open=el.style.display==='none';
+  el.style.display=open?'flex':'none';
+  if(open){const ta=document.getElementById('qrta_'+uid);if(ta)setTimeout(()=>ta.focus(),0);}
+}
+async function sendQR(uid,postId,threadId){
+  const ta=document.getElementById('qrta_'+uid);
+  const st=document.getElementById('qrst_'+uid);
+  const btn=document.getElementById('qrbtn_'+uid);
+  if(!ta?.value.trim()){st.textContent='内容不能为空';st.className='qr-st err';st.style.display='inline-flex';return;}
+  const tok=document.getElementById('tokenInput').value.trim();
+  if(!tok){st.textContent='未配置 Token';st.className='qr-st err';st.style.display='inline-flex';return;}
+  btn.innerHTML='<div class="spin"></div>';st.style.display='none';
+  const base=(document.getElementById('baseUrlInput').value.trim()||'').replace(/\/$/,'');
+  try{
+    const body={content:ta.value.trim()};
+    if(postId)body.post_id=postId;
+    if(threadId)body.thread_id=threadId;
+    const res=await fetch(base+'/c/c/claw/addPost',{method:'POST',
+      headers:{Authorization:tok,'Content-Type':'application/json'},
+      body:JSON.stringify(body)});
+    const j=await res.json();
+    if(j.errno===0){
+      st.textContent='✓ 回复成功';st.className='qr-st ok';st.style.display='inline-flex';
+      ta.value='';qrCC(uid);
+      setTimeout(()=>{st.style.display='none';document.getElementById('qr_'+uid).style.display='none';},2000);
+    }else{st.textContent=`失败 errno ${j.errno}`;st.className='qr-st err';st.style.display='inline-flex';}
+  }catch(e){st.textContent='网络错误';st.className='qr-st err';st.style.display='inline-flex';}
+  finally{btn.textContent='发送';}
+}
+
+// ── Request builder ──
+function gv(id){const el=document.getElementById(id);return el?el.value.trim():null;}
+function gn(id){const v=gv(id);return v?parseInt(v):null;}
+function getBase(){return(document.getElementById('baseUrlInput').value.trim()||'').replace(/\/$/,'');}
+
+function buildReq(){
+  const cfg=TABS[currentTab];
+  const base=getBase();
+  const tok=document.getElementById('tokenInput').value.trim();
+  let url=base+cfg.path;
+  const headers={Authorization:tok||'YOUR_TOKEN'};
+  let body=null;
+  if(cfg.method==='POST'){
+    headers['Content-Type']='application/json';
+    const p={};
+    if(currentTab==='addThread'){p.title=gv('f_title')||'';p.content=[{type:'text',content:gv('f_content')||''}];const tid=gv('f_tab');if(tid){p.tab_id=parseInt(tid);p.tab_name=TAB_MAP[tid];}}
+    else if(currentTab==='addPost'){p.content=gv('f_content')||'';const tid=gn('f_thread_id'),pid=gn('f_post_id');if(tid)p.thread_id=tid;if(pid)p.post_id=pid;}
+    else if(currentTab==='opAgree'){const tid=gn('f_thread_id');if(tid)p.thread_id=tid;p.obj_type=[1,1,2,3][pillState['ot']||1];p.op_type=[0,0,1][pillState['op']||1];const pid=gn('f_post_id');if(pid)p.post_id=pid;}
+    else if(currentTab==='modifyName'){p.name=gv('f_name')||'';}
+    else if(currentTab==='delThread'){const tid=gn('f_thread_id');if(tid)p.thread_id=tid;}
+    else if(currentTab==='delPost'){const pid=gn('f_post_id');if(pid)p.post_id=pid;}
+    body=JSON.stringify(p);
+  }else{
+    headers['Content-Type']='application/x-www-form-urlencoded;charset=UTF-8';
+    const p=new URLSearchParams();
+    if(currentTab==='frs'){p.set('sort_type',(pillState['st']||1)===1?0:3);}
+    else if(currentTab==='pb'){const kz=gv('f_kz');if(kz)p.set('kz',kz);p.set('pn',gv('f_pn')||'1');p.set('r',[0,0,1,2][pillState['r']||1]);}
+    else if(currentTab==='floor'){const pid=gv('f_post_id'),tid=gv('f_thread_id'),offset=gv('f_offset');if(pid)p.set('post_id',pid);if(tid)p.set('thread_id',tid);if(offset)p.set('offset',offset);}
+    else if(currentTab==='replyme'){p.set('pn',gv('f_pn')||'1');}
+    if(p.toString())url+='?'+p.toString();
+  }
+  return{url,method:cfg.method,headers,body};
+}
+
+// ── Send ──
+async function sendReq(){
+  const tok=document.getElementById('tokenInput').value.trim();
+  if(!tok){alert('请先在「⚙ 配置」中填写 TB_TOKEN');return;}
+  const btn=document.getElementById('sendBtn'),txt=document.getElementById('sendTxt');
+  btn.disabled=true;txt.innerHTML='<div class="spin"></div>';
+  clearResp();clearViz();
+  const req=buildReq();const t0=Date.now();
+  try{
+    const opts={method:req.method,headers:req.headers};if(req.body)opts.body=req.body;
+    const res=await fetch(req.url,opts);const elapsed=Date.now()-t0;
+    const text=await res.text();lastRaw=text;
+    let parsed;try{parsed=JSON.parse(text);}catch{parsed=text;}
+    showResp(res.status,parsed,elapsed);
+    if(typeof parsed==='object'){renderViz(currentTab,parsed);
+      // Auto-switch to viz on mobile
+      if(window.innerWidth<=640) switchMobView('viz', null);
+    }
+  }catch(err){lastRaw=err.message;showErr(err.message);
+    if(window.innerWidth<=640) switchMobView('resp', null);
+  }
+  finally{btn.disabled=false;txt.textContent='发送';}
+}
+
+function showResp(status,data,ms){
+  document.getElementById('emptyResp').style.display='none';
+  document.getElementById('respContent').style.display='block';
+  document.getElementById('copyRespBtn').style.display='flex';
+  const b=document.getElementById('stBadge');
+  b.style.display='inline-flex';b.className='sbadge '+(status===429?'s-warn':status>=400?'s-err':'s-ok');b.textContent=status;
+  document.getElementById('respTime').textContent=`${ms}ms`;
+  const pretty=typeof data==='string'?data:JSON.stringify(data,null,2);
+  document.getElementById('respText').innerHTML=syntaxHL(pretty);
+}
+function showErr(msg){
+  document.getElementById('emptyResp').style.display='none';
+  document.getElementById('respContent').style.display='block';
+  document.getElementById('copyRespBtn').style.display='flex';
+  const b=document.getElementById('stBadge');b.style.display='inline-flex';b.className='sbadge s-err';b.textContent='ERR';
+  document.getElementById('respText').textContent=msg;
+}
+function clearResp(){
+  document.getElementById('emptyResp').style.display='flex';
+  document.getElementById('respContent').style.display='none';
+  document.getElementById('copyRespBtn').style.display='none';
+  document.getElementById('stBadge').style.display='none';
+  document.getElementById('respTime').textContent='';
+  document.getElementById('respText').innerHTML='';
+}
+function clearViz(){
+  document.getElementById('vizEmpty').style.display='flex';
+  document.getElementById('vizContent').style.display='none';
+  document.getElementById('vizContent').innerHTML='';
+}
+function syntaxHL(json){
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,m=>{
+    if(/^"/.test(m))return/:$/.test(m)?`<span class="j-key">${m}</span>`:`<span class="j-str">${m}</span>`;
+    if(/true|false/.test(m))return`<span class="j-bool">${m}</span>`;
+    if(/null/.test(m))return`<span class="j-null">${m}</span>`;
+    return`<span class="j-num">${m}</span>`;
+  });
+}
+async function copyReq(){
+  const req=buildReq();let text=`${req.method} ${req.url}\n`;
+  for(const[k,v]of Object.entries(req.headers))text+=`${k}: ${v}\n`;
+  if(req.body)text+='\n'+JSON.stringify(JSON.parse(req.body),null,2);
+  await navigator.clipboard.writeText(text);
+  const btn=document.querySelector('.topbar .btn-ghost');if(btn){const o=btn.textContent;btn.textContent='✓ 已复制';setTimeout(()=>btn.textContent=o,1500);}
+}
+async function copyResp(){
+  await navigator.clipboard.writeText(lastRaw);
+  const btn=document.getElementById('copyRespBtn');const o=btn.textContent;btn.textContent='✓ 已复制';setTimeout(()=>btn.textContent=o,1500);
+}
+
+// ── Tab switch ──
+function switchTab(el,tab){
+  currentTab=tab;
+  document.querySelectorAll('.sb-item').forEach(e=>e.classList.remove('active'));el.classList.add('active');
+  const cfg=TABS[tab];
+  const mEl=document.getElementById('topMethod');
+  mEl.textContent=cfg.method;mEl.className=cfg.method==='POST'?'ep-method mp':'ep-method mg';
+  mEl.style.cssText='font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 7px;border-radius:3px;';
+  document.getElementById('topUrl').innerHTML=`<span>${getBase()}</span>${cfg.path}`;
+  document.getElementById('formArea').innerHTML=cfg.render();
+  clearResp();clearViz();
+}
+
+// Mobile nav tab switch
+function mobSwitchTab(el,tab){
+  // sync sidebar
+  const sbItems=document.querySelectorAll('.sb-item');
+  const tabOrder=['addThread','addPost','opAgree','modifyName','delThread','delPost','frs','pb','floor','replyme'];
+  const idx=tabOrder.indexOf(tab);
+  sbItems.forEach((e,i)=>{e.classList.toggle('active',i===idx);});
+  // sync mob-nav
+  document.querySelectorAll('.mob-nav-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  // do tab logic
+  currentTab=tab;
+  const cfg=TABS[tab];
+  const mEl=document.getElementById('topMethod');
+  mEl.textContent=cfg.method;mEl.className=cfg.method==='POST'?'ep-method mp':'ep-method mg';
+  mEl.style.cssText='font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 7px;border-radius:3px;';
+  document.getElementById('topUrl').innerHTML=`<span>${getBase()}</span>${cfg.path}`;
+  document.getElementById('formArea').innerHTML=cfg.render();
+  clearResp();clearViz();
+  // switch to form panel
+  if(window.innerWidth<=640) switchMobView('form', document.querySelector('#mobViewTabs .mob-view-tab'));
+}
+
+// Mobile view panel switch (表单 / 响应 / 可视化)
+function switchMobView(view, el){
+  if(window.innerWidth>640) return;
+  // update tab highlight
+  document.querySelectorAll('.mob-view-tab').forEach((t,i)=>{
+    const views=['form','resp','viz'];
+    t.classList.toggle('active', views[i]===view);
+  });
+  // toggle class on panes for CSS-driven visibility
+  const panes=document.getElementById('panes');
+  panes.classList.toggle('mob-show-resp', view==='resp');
+  panes.classList.toggle('mob-show-viz', view==='viz');
+}
+
+// ── Form helpers ──
+function charcnt(fid,cid,max){
+  const val=document.getElementById(fid)?.value||'';
+  const len=[...val].reduce((s,c)=>s+(c.charCodeAt(0)>127?2:1),0);
+  const el=document.getElementById(cid);if(!el)return;
+  el.textContent=`${len} / ${max}`;
+  el.className='cc'+(len>=max?' over':len>max*.88?' warn':'');
+}
+function setPill(g,idx,total){
+  pillState[g]=idx;
+  for(let i=1;i<=total;i++){const el=document.getElementById(g+i);if(el)el.classList.toggle('active',i===idx);}
+}
+
+// ── Config ──
+function updateToken(){
+  const val=document.getElementById('tokenInput').value.trim();
+  document.getElementById('tokDot').className='tok-dot'+(val?' on':'');
+  document.getElementById('tokPreview').textContent=val?(val.length>12?val.slice(0,5)+'…'+val.slice(-3):val):'未设置 Token';
+  localStorage.setItem(LS_TOK,document.getElementById('tokenInput').value);
+}
+function updateBaseUrl(){
+  document.getElementById('topUrl').innerHTML=`<span>${getBase()}</span>${TABS[currentTab].path}`;
+  localStorage.setItem(LS_BASE,getBase());
+}
+function toggleTokVis(){const i=document.getElementById('tokenInput');i.type=i.type==='password'?'text':'password';}
+function openModal(){document.getElementById('cfgModal').classList.add('open');}
+function closeModal(){document.getElementById('cfgModal').classList.remove('open');}
+document.getElementById('cfgModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+document.getElementById('tokenInput').addEventListener('input',updateToken);
+document.getElementById('baseUrlInput').addEventListener('input',updateBaseUrl);
+
+function loadConfig(){
+  const tok=localStorage.getItem(LS_TOK),base=localStorage.getItem(LS_BASE);
+  if(tok){document.getElementById('tokenInput').value=tok;updateToken();}
+  if(base){document.getElementById('baseUrlInput').value=base;}
+  updateBaseUrl();
+}
+
+// ── Resizable panes ──
+(function(){
+  // Vertical
+  const dragV=document.getElementById('dragV');
+  const paneLeft=document.getElementById('paneLeft');
+  const panes=document.getElementById('panes');
+  let vDrag=false,vX=0,vW=0;
+  dragV.addEventListener('mousedown',e=>{vDrag=true;vX=e.clientX;vW=paneLeft.offsetWidth;dragV.classList.add('drag');document.body.style.cursor='col-resize';document.body.style.userSelect='none';});
+  document.addEventListener('mousemove',e=>{if(!vDrag)return;const dx=e.clientX-vX;const nw=Math.max(240,Math.min(panes.offsetWidth-200,vW+dx));paneLeft.style.width=nw+'px';});
+  document.addEventListener('mouseup',()=>{if(vDrag){vDrag=false;dragV.classList.remove('drag');document.body.style.cursor='';document.body.style.userSelect='';}});
+
+  // Horizontal
+  const dragH=document.getElementById('dragH');
+  const formArea=document.getElementById('formArea');
+  const respArea=document.getElementById('respArea');
+  let hDrag=false,hY=0,hH=0,hTotal=0;
+  dragH.addEventListener('mousedown',e=>{
+    hDrag=true;hY=e.clientY;hH=respArea.offsetHeight;
+    hTotal=paneLeft.offsetHeight-dragH.offsetHeight;
+    dragH.classList.add('drag');document.body.style.cursor='row-resize';document.body.style.userSelect='none';
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!hDrag)return;
+    const dy=e.clientY-hY;
+    const nh=Math.max(60,Math.min(hTotal-80,hH-dy));
+    respArea.style.height=nh+'px';
+  });
+  document.addEventListener('mouseup',()=>{if(hDrag){hDrag=false;dragH.classList.remove('drag');document.body.style.cursor='';document.body.style.userSelect='';}});
+})();
+
+// ── Init ──
+loadConfig();
+document.getElementById('formArea').innerHTML=TABS.addThread.render();
+</script>
+</body>
+</html>
