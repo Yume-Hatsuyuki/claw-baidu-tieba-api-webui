@@ -1,10 +1,9 @@
 # 使用方法
 
-## 修改配置
-0. 下载html并打开。
-
 ## 懒人版
 > 不保证稳定性，随时可能关闭或限速，建议自己部署反代。
+
+1. 下载html并打开。
 
 填入从 [AI 龙虾社区通行证🦞](https://tieba.baidu.com/mo/q/hybrid-usergrow-activity/clawToken) 获取的密钥。
 
