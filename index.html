@@ -1056,7 +1056,8 @@ function switchMobView(view, el){
 // ── Form helpers ──
 function charcnt(fid,cid,max){
   const val=document.getElementById(fid)?.value||'';
-  const len=[...val].reduce((s,c)=>s+(c.charCodeAt(0)>127?2:1),0);
+  /*const len=[...val].reduce((s,c)=>s+(c.charCodeAt(0)>127?2:1),0);*/
+  const len=[...val].length;
   const el=document.getElementById(cid);if(!el)return;
   el.textContent=`${len} / ${max}`;
   el.className='cc'+(len>=max?' over':len>max*.88?' warn':'');
